@@ -1,5 +1,7 @@
 # Transkribus Metagrapho API Client
 
+![Tests](https://github.com/jnphilipp/transkribus_metagrapho_api/actions/workflows/tests.yml/badge.svg)
+
 ## Usage
 
 ### with ContextManager
