@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "transkribus_metagrapho_api"
+version = "0.1.0"
+authors = [
+    {name = "J. Nathanael Philipp", email = "nathanael@philipp.land"}
+]
+description="Transkribus Metagrapho API Client."
+readme = "README.md"
+license = {text = "GPLv3+"}
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dynamic = ["dependencies"]
+keywords = ["transkribus", "api"]
+
+
+[project.urls]
+"Homepage" = "https://github.com/jnphilipp/transkribus_metagrapho_api"
+"Bug Tracker" = "http://github.com/jnphilipp/transkribus_metagrapho_api/issues"
+
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
