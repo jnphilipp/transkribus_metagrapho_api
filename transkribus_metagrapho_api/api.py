@@ -233,6 +233,7 @@ class TranskribusMetagraphoAPI:
 
         xmls: List[str | None] = [None] * len(args)
         while len(process_ids) > 0:
+            to_del = []
             for process_id, image_path in process_ids.items():
                 try:
                     if self.is_finished(process_id):
@@ -248,14 +249,17 @@ class TranskribusMetagraphoAPI:
                                 f'<Page imageFilename="{image_path.name}"',
                                 self.page(process_id),
                             )
-                        del process_ids[process_id]
+                        to_del.append(process_id)
                 except Exception as e:
                     logging.error(
                         "An error occurred while checking the state and retriving "
                         + f"results for {image_path}.",
                         exc_info=e,
                     )
-                    del process_ids[process_id]
+                    to_del.append(process_id)
+
+            for process_id in to_del:
+                del process_ids[process_id]
             time.sleep(wait)
         return xmls
 
@@ -297,7 +301,7 @@ class TranskribusMetagraphoAPI:
         """
         try:
             return self.state(process_id)["status"] == "FINISHED"
-        finally:
+        except Exception:
             return False
 
     def page(self, process_id: int) -> str:
