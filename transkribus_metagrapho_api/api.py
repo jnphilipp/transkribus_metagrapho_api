@@ -104,6 +104,7 @@ class TranskribusMetagraphoAPI:
                     raise RuntimeError(
                         "Refresh token is expired, need to reauthenticate."
                     )
+                logging.debug("Refresh access token.")
                 r = requests.post(
                     f"{self.BASE_URL}/token",
                     headers={"Content-Type": "application/x-www-form-urlencoded"},
@@ -131,6 +132,7 @@ class TranskribusMetagraphoAPI:
 
         def revoke(self) -> bool:
             """Revoke access token."""
+            logging.debug("Revoke access token.")
             r = requests.post(
                 f"{self.BASE_URL}/logout",
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
@@ -153,6 +155,7 @@ class TranskribusMetagraphoAPI:
         @classmethod
         def obtain(cls: Type[T], username: str, password: str) -> T:
             """Obtain access token."""
+            logging.debug("Obtain access token.")
             r = requests.post(
                 f"{cls.BASE_URL}/token",
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
@@ -214,6 +217,7 @@ class TranskribusMetagraphoAPI:
         process_ids: Dict[int, Path] = {}
         for image_path in args:
             try:
+                logging.debug("Send {image_path} to processing endpoint.")
                 process_ids[
                     self.process(
                         image_path,
@@ -236,20 +240,25 @@ class TranskribusMetagraphoAPI:
             to_del = []
             for process_id, image_path in process_ids.items():
                 try:
-                    if self.is_finished(process_id):
-                        if mode == "alto":
-                            xmls[args.index(image_path)] = re.sub(
-                                r"<fileName>.+?</fileName>",
-                                f"<fileName>{image_path.name}</fileName>",
-                                self.alto(process_id),
-                            )
-                        elif mode == "page":
-                            xmls[args.index(image_path)] = re.sub(
-                                r'<Page imageFilename="[^"]+"',
-                                f'<Page imageFilename="{image_path.name}"',
-                                self.page(process_id),
-                            )
-                        to_del.append(process_id)
+                    status = self.status(process_id)
+                    logging.debug(f"{image_path} [{process_id}] {status}")
+                    match status.upper():
+                        case "FINISHED":
+                            if mode == "alto":
+                                xmls[args.index(image_path)] = re.sub(
+                                    r"<fileName>.+?</fileName>",
+                                    f"<fileName>{image_path.name}</fileName>",
+                                    self.alto(process_id),
+                                )
+                            elif mode == "page":
+                                xmls[args.index(image_path)] = re.sub(
+                                    r'<Page imageFilename="[^"]+"',
+                                    f'<Page imageFilename="{image_path.name}"',
+                                    self.page(process_id),
+                                )
+                            to_del.append(process_id)
+                        case "FAILED":
+                            to_del.append(process_id)
                 except Exception as e:
                     logging.error(
                         "An error occurred while checking the state and retriving "
@@ -272,6 +281,7 @@ class TranskribusMetagraphoAPI:
         Returns:
          * ALTO XML
         """
+        logging.debug(f"Get ALTO XML for {process_id}.")
         r = requests.get(
             f"{self.BASE_URL}/processes/{process_id}/alto",
             headers={"Authorization": self.access_token.get_auth_token()},
@@ -290,20 +300,6 @@ class TranskribusMetagraphoAPI:
         """
         return self.access_token.revoke()
 
-    def is_finished(self, process_id: int) -> bool:
-        """Check if the process is finished.
-
-        Args:
-         * process_id: a process id
-
-        Returns:
-         * `True` if the state return by the API is `FINISHED` otherwise `False`
-        """
-        try:
-            return self.state(process_id)["status"] == "FINISHED"
-        except Exception:
-            return False
-
     def page(self, process_id: int) -> str:
         """Retrive PAGE XML.
 
@@ -313,6 +309,7 @@ class TranskribusMetagraphoAPI:
         Returns:
          * PAGE XML
         """
+        logging.debug(f"Get PAGE-XML for {process_id}.")
         r = requests.get(
             f"{self.BASE_URL}/processes/{process_id}/page",
             headers={"Authorization": self.access_token.get_auth_token()},
@@ -368,10 +365,11 @@ class TranskribusMetagraphoAPI:
         if not image_path.is_file():
             raise TypeError(f"{image_path} is not a file.")
 
+        logging.debug("Open image {image_path} and base64 encode it.")
         image = Image.open(image_path)
         buffered = BytesIO()
         image.save(buffered, format="JPEG", quality=95)
-        img_base64 = base64.b64encode(buffered.getvalue())
+        img_base64 = base64.b64encode(buffered.getvalue()).decode()
 
         r = requests.post(
             f"{self.BASE_URL}/processes",
@@ -384,10 +382,11 @@ class TranskribusMetagraphoAPI:
                 },
             },
         )
+        logging.debug(f"Response: {r.text}")
         r.raise_for_status()
         return r.json()["processId"]
 
-    def state(self, process_id: int) -> Dict:
+    def status(self, process_id: int) -> str:
         """Make an API call to retrive the state for a process ID.
 
         Args:
@@ -396,12 +395,14 @@ class TranskribusMetagraphoAPI:
         Returns:
          * JSON response from the API
         """
+        logging.debug("Check status for {process_id}.")
         r = requests.get(
             f"{self.BASE_URL}/processes/{process_id}",
             headers={"Authorization": self.access_token.get_auth_token()},
         )
 
-        return r.json()
+        logging.debug(f"Response: {r.text}")
+        return r.json()["status"]
 
 
 @contextmanager
