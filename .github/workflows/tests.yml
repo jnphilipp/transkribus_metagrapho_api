@@ -23,7 +23,7 @@ jobs:
           python -m pip install mypy types-requests
       - uses: psf/black@stable
         with:
-          options: "--check --verbose"
+          options: "-l 88 --check --verbose"
       - name: Flake8
         run: flake8 . --max-line-length=88 --count --statistics
       - name: mypy
