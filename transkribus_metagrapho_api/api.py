@@ -1,4 +1,4 @@
-# Copyright (C) 2023 J. Nathanael Philipp (jnphilipp) <nathanael@philipp.land>
+# Copyright (C) 2023-2024 J. Nathanael Philipp (jnphilipp) <nathanael@philipp.land>
 #
 # Transkribus Metagrapho API Client
 #
@@ -47,9 +47,9 @@ class TranskribusMetagraphoAPI:
         """API access token."""
 
         T = TypeVar("T", bound="TranskribusMetagraphoAPI.AccessToken")
-        BASE_URL: Final[
-            str
-        ] = "https://account.readcoop.eu/auth/realms/readcoop/protocol/openid-connect"
+        BASE_URL: Final[str] = (
+            "https://account.readcoop.eu/auth/realms/readcoop/protocol/openid-connect"
+        )
 
         access_token: str
         expires: datetime
