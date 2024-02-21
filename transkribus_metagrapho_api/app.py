@@ -86,7 +86,7 @@ def main():
     parser.add_argument(
         "--sleep",
         type=int,
-        default=5,
+        default=45,
         help="wait time between check status requests, in seconds.",
     )
 

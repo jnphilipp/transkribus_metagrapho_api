@@ -195,7 +195,7 @@ class TranskribusMetagraphoAPI:
         text: str | None = None,
         regions: List[Dict] | None = None,
         mode: Literal["alto", "page"] = "page",
-        wait: int = 5,
+        wait: int = 45,
         **kwargs: float | int,
     ) -> List[str | None]:
         """Run processing on several images and get ALTO or PAGE XML.
@@ -240,6 +240,7 @@ class TranskribusMetagraphoAPI:
         xmls: List[str | None] = [None] * len(args)
         while len(process_ids) > 0:
             to_del = []
+            counter = 0
             for process_id, image_path in process_ids.items():
                 try:
                     status = self.status(process_id)
@@ -261,6 +262,10 @@ class TranskribusMetagraphoAPI:
                             to_del.append(process_id)
                         case "FAILED":
                             to_del.append(process_id)
+                        case _:
+                            counter += 1
+                            if counter >= 5:
+                                break
                 except Exception as e:
                     logging.error(
                         "An error occurred while checking the state and retriving "
