@@ -191,11 +191,12 @@ class TranskribusMetagraphoAPI:
         *args: Path,
         htr_id: int,
         line_detection: int | None = None,
-        language_model: int | None = None,
+        language_model: str | None = None,
         text: str | None = None,
         regions: List[Dict] | None = None,
         mode: Literal["alto", "page"] = "page",
         wait: int = 5,
+        **kwargs: float | int,
     ) -> List[str | None]:
         """Run processing on several images and get ALTO or PAGE XML.
 
@@ -226,6 +227,7 @@ class TranskribusMetagraphoAPI:
                         language_model=language_model,
                         text=text,
                         regions=regions,
+                        **kwargs,
                     )
                 ] = image_path
             except Exception as e:
@@ -335,9 +337,10 @@ class TranskribusMetagraphoAPI:
         image_path: str | Path,
         htr_id: int,
         line_detection: int | None = None,
-        language_model: int | None = None,
+        language_model: str | None = None,
         text: str | None = None,
         regions: List[Dict] | None = None,
+        **kwargs: float | int,
     ) -> int:
         """Send an image for processing.
 
@@ -354,18 +357,33 @@ class TranskribusMetagraphoAPI:
         Returns:
          * the process ID return by the API
         """
-        config = {
+        config: Dict = {
             "textRecognition": {
                 "htrId": htr_id,
             }
         }
-        content: Dict[str, str | List[Dict]] = {}
+        if language_model is not None:
+            config["textRecognition"]["languageModel"] = language_model
         if line_detection is not None:
             config["lineDetection"] = {
                 "modelId": line_detection,
             }
-        if language_model is not None:
-            config["textRecognition"]["languageModel"] = language_model
+            if "minimalBaselineLength" in kwargs:
+                config["lineDetection"]["minimalBaselineLength"] = kwargs[
+                    "minimalBaselineLength"
+                ]
+            if "baselineAccuracyThreshold" in kwargs:
+                config["lineDetection"]["baselineAccuracyThreshold"] = kwargs[
+                    "baselineAccuracyThreshold"
+                ]
+            if "maxDistForMerging" in kwargs:
+                config["lineDetection"]["maxDistForMerging"] = kwargs[
+                    "maxDistForMerging"
+                ]
+            if "numTextRegions" in kwargs:
+                config["lineDetection"]["numTextRegions"] = kwargs["numTextRegions"]
+
+        content: Dict[str, str | List[Dict]] = {}
         if text is not None:
             content["text"] = text
         if regions is not None:
@@ -412,6 +430,7 @@ class TranskribusMetagraphoAPI:
                 language_model,
                 text,
                 regions,
+                **kwargs,
             )
 
         r.raise_for_status()
