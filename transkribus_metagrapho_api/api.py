@@ -377,11 +377,17 @@ class TranskribusMetagraphoAPI:
         if not image_path.is_file():
             raise TypeError(f"{image_path} is not a file.")
 
-        logging.debug("Open image {image_path} and base64 encode it.")
-        image = Image.open(image_path)
-        buffered = BytesIO()
-        image.save(buffered, format="JPEG", quality=95)
-        img_base64 = base64.b64encode(buffered.getvalue()).decode()
+        if image_path.stat().st_size > 19000000:
+            logging.debug(
+                "Open image {image_path}, convert (>19MB) and base64 encode it."
+            )
+            image = Image.open(image_path)
+            buffered = BytesIO()
+            image.save(buffered, format="JPEG", quality=95)
+            img_base64 = base64.b64encode(buffered.getvalue()).decode()
+        else:
+            logging.debug("Open image {image_path} (<19MB) and base64 encode it.")
+            img_base64 = base64.b64encode(open(image_path, "rb").read()).decode()
 
         r = requests.post(
             f"{self.BASE_URL}/processes",
