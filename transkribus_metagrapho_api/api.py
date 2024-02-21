@@ -287,6 +287,12 @@ class TranskribusMetagraphoAPI:
             headers={"Authorization": self.access_token.get_auth_token()},
         )
 
+        logging.debug(f"Response: {r.text}")
+        if r.status_code == 401:
+            logging.debug("Lost authorization, refreshing token.")
+            self.access_token.refresh(True)
+            return self.alto(process_id)
+
         r.raise_for_status()
         return r.text
 
@@ -314,6 +320,12 @@ class TranskribusMetagraphoAPI:
             f"{self.BASE_URL}/processes/{process_id}/page",
             headers={"Authorization": self.access_token.get_auth_token()},
         )
+
+        logging.debug(f"Response: {r.text}")
+        if r.status_code == 401:
+            logging.debug("Lost authorization, refreshing token.")
+            self.access_token.refresh(True)
+            return self.page(process_id)
 
         r.raise_for_status()
         return r.text
@@ -382,7 +394,20 @@ class TranskribusMetagraphoAPI:
                 },
             },
         )
+
         logging.debug(f"Response: {r.text}")
+        if r.status_code == 401:
+            logging.debug("Lost authorization, refreshing token.")
+            self.access_token.refresh(True)
+            return self.process(
+                image_path,
+                htr_id,
+                line_detection,
+                language_model,
+                text,
+                regions,
+            )
+
         r.raise_for_status()
         return r.json()["processId"]
 
@@ -402,6 +427,11 @@ class TranskribusMetagraphoAPI:
         )
 
         logging.debug(f"Response: {r.text}")
+        if r.status_code == 401:
+            logging.debug("Lost authorization, refreshing token.")
+            self.access_token.refresh(True)
+            return self.status(process_id)
+
         return r.json()["status"]
 
 
