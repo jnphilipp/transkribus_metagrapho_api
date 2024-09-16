@@ -1,6 +1,9 @@
-# Transkribus Metagrapho API Client
+# Transkribus Processing API Client
 
 ![Tests](https://github.com/jnphilipp/transkribus_metagrapho_api/actions/workflows/tests.yml/badge.svg)
+[![pypi Version](https://img.shields.io/pypi/v/transkribus_metagrapho_api.svg?logo=pypi&logoColor=white)](https://pypi.org/project/transkribus_metagrapho_api/)
+
+Python bindings for the [Transkribus Metagrapho/Processing API](https://www.transkribus.org/metagrapho/documentation).
 
 ## Usage
 
