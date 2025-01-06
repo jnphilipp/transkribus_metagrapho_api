@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2024 J. Nathanael Philipp (jnphilipp) <nathanael@philipp.land>
+# Copyright (C) 2023-2025 J. Nathanael Philipp (jnphilipp) <nathanael@philipp.land>
 #
 # Transkribus Metagrapho API Client
 #
@@ -25,7 +25,7 @@ __all__ = ["TranskribusMetagraphoAPI", "transkribus_metagrapho_api"]
 __app_name__ = "transkribus-metagrapho-api"
 __author__ = "J. Nathanael Philipp"
 __email__ = "nathanael@philipp.land"
-__copyright__ = "Copyright 2023-2024 J. Nathanael Philipp (jnphilipp)"
+__copyright__ = "Copyright 2023-2025 J. Nathanael Philipp (jnphilipp)"
 __license__ = "GPLv3"
 __version_info__ = (0, 1, 4)
 __version__ = ".".join(str(e) for e in __version_info__)
