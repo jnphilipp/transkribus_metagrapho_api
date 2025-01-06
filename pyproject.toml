@@ -37,3 +37,8 @@ keywords = ["transkribus", "api"]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.package-data]
+transkribus_metagrapho_api = [
+    "py.typed",
+]
