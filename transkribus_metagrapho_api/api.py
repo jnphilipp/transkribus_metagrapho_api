@@ -223,7 +223,7 @@ class TranskribusMetagraphoApi:
         process_ids: dict[int, Path] = {}
         for image_path in args:
             try:
-                logging.debug("Send {image_path} to processing endpoint.")
+                logging.debug(f"Send {image_path} to processing endpoint.")
                 process_ids[
                     self.process(
                         image_path,
@@ -464,7 +464,7 @@ class TranskribusMetagraphoApi:
         Returns:
          * JSON response from the API
         """
-        logging.debug("Check status for {process_id}.")
+        logging.debug(f"Check status for {process_id}.")
         r = requests.get(
             f"{self.BASE_URL}/processes/{process_id}",
             headers={"Authorization": self.access_token.get_auth_token()},
