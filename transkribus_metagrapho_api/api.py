@@ -31,7 +31,6 @@ from pathlib import Path
 from PIL import Image
 from typing import Literal, Final, Generator, Type, TypeVar
 
-
 MAX_IMAGE_SIZE: Final[int] = 20000000
 """Maximum image size (in bytes) that Transkribus accepts, lager images while converted
 to reduce the size."""
@@ -253,16 +252,12 @@ class TranskribusMetagraphoApi:
                     match status.upper():
                         case "FINISHED":
                             if mode == "alto":
-                                xmls[args.index(image_path)] = re.sub(
-                                    r"<fileName>.+?</fileName>",
-                                    f"<fileName>{image_path.name}</fileName>",
-                                    self.alto(process_id),
+                                xmls[args.index(image_path)] = self.alto(
+                                    process_id, image_path.name
                                 )
                             elif mode == "page":
-                                xmls[args.index(image_path)] = re.sub(
-                                    r'<Page imageFilename="[^"]+"',
-                                    f'<Page imageFilename="{image_path.name}"',
-                                    self.page(process_id),
+                                xmls[args.index(image_path)] = self.page(
+                                    process_id, image_path.name
                                 )
                             to_del.append(process_id)
                         case "FAILED":
@@ -284,14 +279,16 @@ class TranskribusMetagraphoApi:
             time.sleep(wait)
         return xmls
 
-    def alto(self, process_id: int) -> str:
-        """Retrive ALTO XML.
+    def alto(self, process_id: int, image_filename: str | None = None) -> str:
+        """Retrive ALTO-XML.
 
         Args:
          * process_id: a process id
+         * image_filename: changes the image filename in the ALTO-XML toi the given
+           value if not `None`
 
         Returns:
-         * ALTO XML
+         * ALTO-XML
         """
         logging.debug(f"Get ALTO XML for {process_id}.")
         r = requests.get(
@@ -306,7 +303,15 @@ class TranskribusMetagraphoApi:
             return self.alto(process_id)
 
         r.raise_for_status()
-        return r.text
+        return (
+            r.text
+            if image_filename is None
+            else re.sub(
+                r"<fileName>.+?</fileName>",
+                f"<fileName>{image_filename}</fileName>",
+                r.text,
+            )
+        )
 
     def close(self) -> bool:
         """Close this API.
@@ -318,14 +323,16 @@ class TranskribusMetagraphoApi:
         """
         return self.access_token.revoke()
 
-    def page(self, process_id: int) -> str:
-        """Retrive PAGE XML.
+    def page(self, process_id: int, image_filename: str | None = None) -> str:
+        """Retrive PAGE-XML.
 
         Args:
          * process_id: a process id
+         * image_filename: changes the image filename in the PAGE-XML to the given value
+           if not `None`
 
         Returns:
-         * PAGE XML
+         * PAGE-XML
         """
         logging.debug(f"Get PAGE-XML for {process_id}.")
         r = requests.get(
@@ -340,7 +347,15 @@ class TranskribusMetagraphoApi:
             return self.page(process_id)
 
         r.raise_for_status()
-        return r.text
+        return (
+            r.text
+            if image_filename is None
+            else re.sub(
+                r'<Page imageFilename="[^"]+"',
+                f'<Page imageFilename="{image_filename}"',
+                r.text,
+            )
+        )
 
     def process(
         self,
