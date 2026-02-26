@@ -19,6 +19,7 @@
 """Transkribus Metagrapho API Client."""
 
 import base64
+import json
 import logging
 import re
 import requests
@@ -192,16 +193,15 @@ class TranskribusMetagraphoApi:
 
     def __call__(
         self,
-        *args: Path,
+        *args: str | Path | tuple[Path, str | None, list[dict] | None],
         htr_id: int,
         line_detection: int | None = None,
         language_model: str | None = None,
-        text: str | None = None,
-        regions: list[dict] | None = None,
         mode: Literal["alto", "page"] = "page",
         wait: int = 45,
+        process_ids_file: Path | None = None,
         **kwargs: float | int,
-    ) -> list[str | None]:
+    ) -> dict[Path, str | None]:
         """Run processing on several images and get ALTO or PAGE XML.
 
         Catches all exceptions that occur, the error are logged to stderr.
@@ -219,46 +219,78 @@ class TranskribusMetagraphoApi:
         Returns:
          * list of XML, if an error occured for a given image `None` is returned
         """
-        process_ids: dict[int, Path] = {}
-        for image_path in args:
+        process_ids: dict[int, tuple[Path, str | None, list[dict] | None, int]] = {}
+        if process_ids_file is not None and process_ids_file.exists():
+            logging.info(f"Reading process IDs from {process_ids_file}.")
+            with open(process_ids_file, "r", encoding="utf8") as f:
+                for k, v in json.loads(f.read()).items():
+                    process_ids[k] = (Path(v[0]), v[1], v[2], 0)
+            logging.debug(f"Read {len(process_ids)} process IDs.")
+
+        for arg in args:
+            if isinstance(arg, str):
+                if any([v[0] == Path(arg) for v in process_ids.values()]):
+                    continue
+                arg = (Path(arg), None, None)
+            elif isinstance(arg, Path):
+                if any([v[0] == arg for v in process_ids.values()]):
+                    continue
+                arg = (arg, None, None)
+
             try:
-                logging.debug(f"Send {image_path} to processing endpoint.")
+                logging.debug(
+                    f"Send {arg if isinstance(arg, Path) else arg[0]} to processing "
+                    + "endpoint."
+                )
+
                 process_ids[
                     self.process(
-                        image_path,
+                        arg[0],
                         htr_id=htr_id,
                         line_detection=line_detection,
                         language_model=language_model,
-                        text=text,
-                        regions=regions,
+                        text=arg[1],
+                        regions=arg[2],
                         **kwargs,
                     )
-                ] = image_path
+                ] = (arg[0], arg[1], arg[2], 0)
             except Exception as e:
                 logging.error(
-                    f"An error occurred while sending {image_path} to processing "
+                    "An error occurred while sending "
+                    + f"{arg if isinstance(arg, Path) else arg[0]} to processing "
                     + "endpoint.",
                     exc_info=e,
                 )
 
-        xmls: list[str | None] = [None] * len(args)
+        if process_ids_file is not None:
+            logging.info(f"Write {len(process_ids)} process IDs to {process_ids_file}.")
+            with open(process_ids_file, "w", encoding="utf8") as f:
+                f.write(
+                    json.dumps(
+                        {
+                            k: (str(v[0]), v[1], v[2], v[3])
+                            for k, v in process_ids.items()
+                        }
+                    )
+                )
+                f.write("\n")
+
+        xmls: dict[Path, str | None] = {v[0]: None for v in process_ids.values()}
         while len(process_ids) > 0:
             to_del = []
             counter = 0
-            for process_id, image_path in process_ids.items():
+            for process_id, (path, text, regions, failed) in process_ids.items():
                 try:
+                    if failed >= 5:
+                        continue
                     status = self.status(process_id)
-                    logging.debug(f"{image_path} [{process_id}] {status}")
+                    logging.debug(f"{path} [{process_id}] {status}")
                     match status.upper():
                         case "FINISHED":
                             if mode == "alto":
-                                xmls[args.index(image_path)] = self.alto(
-                                    process_id, image_path.name
-                                )
+                                xmls[path] = self.alto(process_id, path.name)
                             elif mode == "page":
-                                xmls[args.index(image_path)] = self.page(
-                                    process_id, image_path.name
-                                )
+                                xmls[path] = self.page(process_id, path.name)
                             to_del.append(process_id)
                         case "FAILED":
                             to_del.append(process_id)
@@ -269,13 +301,27 @@ class TranskribusMetagraphoApi:
                 except Exception as e:
                     logging.error(
                         "An error occurred while checking the state and retriving "
-                        + f"results for {image_path}.",
+                        + f"results for {path}.",
                         exc_info=e,
                     )
-                    to_del.append(process_id)
+                    process_ids[process_id] = (path, text, regions, failed + 1)
 
             for process_id in to_del:
                 del process_ids[process_id]
+            if process_ids_file is not None:
+                logging.info(
+                    f"Write {len(process_ids)} process IDs to {process_ids_file}."
+                )
+                with open(process_ids_file, "w", encoding="utf8") as f:
+                    f.write(
+                        json.dumps(
+                            {
+                                k: (str(v[0]), v[1], v[2], v[3])
+                                for k, v in process_ids.items()
+                            }
+                        )
+                    )
+                    f.write("\n")
             time.sleep(wait)
         return xmls
 

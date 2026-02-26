@@ -83,6 +83,12 @@ def main():
         help="language model ID.",
     )
     parser.add_argument(
+        "--process-ids-file",
+        default=Path("process_ids.json"),
+        type=lambda p: Path(p).absolute(),
+        help="file to store process ids.",
+    )
+    parser.add_argument(
         "--sleep",
         type=int,
         default=45,
@@ -160,7 +166,7 @@ def main():
         mode = "alto"
     elif args.page:
         mode = "page"
-    xmls = []
+    xmls = {}
     with transkribus_metagrapho_api(args.username, args.password) as api:
         if len(args.images) > 0:
             xmls = api(
@@ -170,9 +176,10 @@ def main():
                 language_model=args.language_model,
                 mode=mode,
                 wait=args.sleep,
+                process_ids_file=args.process_ids_file,
             )
 
-    for path, xml in zip(args.images, xmls):
+    for path, xml in xmls.items():
         with open(path.with_suffix(".xml"), "w", encoding="utf8") as f:
             f.write(xml)
             f.write("\n")
