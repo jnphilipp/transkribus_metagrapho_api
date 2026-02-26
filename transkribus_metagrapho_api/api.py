@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2025 J. Nathanael Philipp (jnphilipp) <nathanael@philipp.land>
+# Copyright (C) 2023-2026 J. Nathanael Philipp (jnphilipp) <nathanael@philipp.land>
 #
 # Transkribus Metagrapho API Client
 #
