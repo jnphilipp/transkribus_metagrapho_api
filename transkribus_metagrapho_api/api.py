@@ -466,9 +466,16 @@ class TranskribusMetagraphoApi:
         if not image_path.is_file():
             raise TypeError(f"{image_path} is not a file.")
 
-        if image_path.stat().st_size > MAX_IMAGE_SIZE:
+        logging.debug(
+            f"Open image {image_path} (<{MAX_IMAGE_SIZE}B) and base64 encode it."
+        )
+        img_base64 = base64.b64encode(open(image_path, "rb").read()).decode()
+        if (
+            image_path.stat().st_size > MAX_IMAGE_SIZE
+            or len(img_base64) > MAX_IMAGE_SIZE
+        ):
             logging.debug(
-                f"Open image {image_path}, convert (>{MAX_IMAGE_SIZE}B) and "
+                f"Image {image_path} too large, convert (>{MAX_IMAGE_SIZE}B) and "
                 + "base64 encode it."
             )
             quality = 95
@@ -476,16 +483,14 @@ class TranskribusMetagraphoApi:
                 image = Image.open(image_path)
                 buffered = BytesIO()
                 image.save(buffered, format="JPEG", quality=quality, optimize=True)
-                if buffered.getbuffer().nbytes > MAX_IMAGE_SIZE:
+                img_base64 = base64.b64encode(buffered.getvalue()).decode()
+                if (
+                    buffered.getbuffer().nbytes > MAX_IMAGE_SIZE
+                    or len(img_base64) > MAX_IMAGE_SIZE
+                ):
                     quality -= 3
                 else:
                     break
-            img_base64 = base64.b64encode(buffered.getvalue()).decode()
-        else:
-            logging.debug(
-                f"Open image {image_path} (<{MAX_IMAGE_SIZE}B) and base64 encode it."
-            )
-            img_base64 = base64.b64encode(open(image_path, "rb").read()).decode()
 
         r = requests.post(
             f"{self.BASE_URL}/processes",
