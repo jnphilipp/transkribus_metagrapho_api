@@ -26,15 +26,15 @@ __app_name__ = "transkribus-metagrapho-api"
 __author__ = "J. Nathanael Philipp"
 __email__ = "nathanael@philipp.land"
 __copyright__ = "Copyright 2023-2026 J. Nathanael Philipp (jnphilipp)"
-__license__ = "GPLv3"
-__version_info__ = (0, 3, 1)
+__license__ = "GPL-3.0-or-later"
+__version_info__ = (0, 3, 2)
 __version__ = ".".join(str(e) for e in __version_info__)
-__github__ = "https://github.com/jnphilipp/transkribus-metagrapho-api"
+__repository__ = "https://github.com/jnphilipp/transkribus-metagrapho-api"
 VERSION = (
     f"%(prog)s v{__version__}\n{__copyright__}\n"
     + "License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>."
     + "\nThis is free software: you are free to change and redistribute it.\n"
     + "There is NO WARRANTY, to the extent permitted by law.\n\n"
-    + f"Report bugs to {__github__}/issues."
+    + f"Report bugs to {__repository__}/issues."
     + f"\nWritten by {__author__} <{__email__}>"
 )
