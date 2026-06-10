@@ -180,6 +180,8 @@ def main():
             )
 
     for path, xml in xmls.items():
+        if xml is None:
+            continue
         with open(path.with_suffix(".xml"), "w", encoding="utf8") as f:
             f.write(xml)
             f.write("\n")
