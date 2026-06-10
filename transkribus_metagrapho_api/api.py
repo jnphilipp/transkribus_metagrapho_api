@@ -221,11 +221,13 @@ class TranskribusMetagraphoApi:
         """
         process_ids: dict[int, tuple[Path, str | None, list[dict] | None, int]] = {}
         if process_ids_file is not None and process_ids_file.exists():
-            logging.info(f"Reading process IDs from {process_ids_file}.")
+            logging.debug(f"Reading process IDs from {process_ids_file}.")
             with open(process_ids_file, "r", encoding="utf8") as f:
                 for k, v in json.loads(f.read()).items():
                     process_ids[k] = (Path(v[0]), v[1], v[2], 0)
-            logging.debug(f"Read {len(process_ids)} process IDs.")
+            logging.debug(
+                f"Read {len(process_ids)} process IDs from {process_ids_file}."
+            )
 
         for arg in args:
             if isinstance(arg, str):
@@ -263,7 +265,9 @@ class TranskribusMetagraphoApi:
                 )
 
         if process_ids_file is not None:
-            logging.info(f"Write {len(process_ids)} process IDs to {process_ids_file}.")
+            logging.debug(
+                f"Write {len(process_ids)} process IDs to {process_ids_file}."
+            )
             with open(process_ids_file, "w", encoding="utf8") as f:
                 f.write(
                     json.dumps(
@@ -274,6 +278,9 @@ class TranskribusMetagraphoApi:
                     )
                 )
                 f.write("\n")
+            logging.debug(
+                f"Saved {len(process_ids)} process IDs to {process_ids_file}."
+            )
 
         xmls: dict[Path, str | None] = {v[0]: None for v in process_ids.values()}
         while len(process_ids) > 0:
@@ -309,7 +316,7 @@ class TranskribusMetagraphoApi:
             for process_id in to_del:
                 del process_ids[process_id]
             if process_ids_file is not None:
-                logging.info(
+                logging.debug(
                     f"Write {len(process_ids)} process IDs to {process_ids_file}."
                 )
                 with open(process_ids_file, "w", encoding="utf8") as f:
@@ -322,6 +329,9 @@ class TranskribusMetagraphoApi:
                         )
                     )
                     f.write("\n")
+                logging.debug(
+                    f"Wrote {len(process_ids)} process IDs to {process_ids_file}."
+                )
             time.sleep(wait)
         return xmls
 
