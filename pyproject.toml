@@ -11,16 +11,15 @@ authors = [
 ]
 description="Transkribus Metagrapho API Client."
 readme = "README.md"
-license = {text = "GPLv3+"}
-requires-python = ">=3.10"
+license = "GPL-3.0-or-later"
+requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
-    "Environment :: Web Environment",
+    "Environment :: Console",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
