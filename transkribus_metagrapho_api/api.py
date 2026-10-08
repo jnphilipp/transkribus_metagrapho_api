@@ -492,6 +492,8 @@ class TranskribusMetagraphoApi:
             while True:
                 image = Image.open(image_path)
                 buffered = BytesIO()
+                if image.mode in ("RGBA", "P"):
+                    image = image.convert("RGB")
                 image.save(buffered, format="JPEG", quality=quality, optimize=True)
                 img_base64 = base64.b64encode(buffered.getvalue()).decode()
                 if (
